@@ -1,3 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name -->
     <string name="app_name">Responder</string>
+
+    <!-- Login Screen Text -->
+    <string name="login_title">Responder</string>
+    <string name="login_subtitle">Login to access your account</string>
+    <string name="sign_in">Sign In</string>
+    <string name="remember_me">Remember Me</string>
+
+    <!-- Input Fields -->
+    <string name="hint_email">Email Address</string>
+    <string name="hint_password">Password</string>
+
+    <!-- Accessibility Descriptions -->
+    <string name="state_selector_description">State selector dropdown. Double tap to open the list of states.</string>
+    <string name="role_selector_description">Role selector dropdown. Double tap to open the list of roles.</string>
+    <string name="select_state">Select your state</string>
+    <string name="select_role">Select your role</string>
+    <string name="state_selected">Selected state: %1$s</string>
+    <string name="role_selected">Selected role: %1$s</string>
+    <string name="login_attempt">Attempting to log in. Please wait.</string>
+    <string name="logo_description">Responder App Logo</string>
+
+    <!-- Validation Messages -->
+    <string name="error_required_field">This field is required</string>
+    <string name="error_invalid_email">Please enter a valid email address</string>
+    <string name="error_invalid_password">Password must be at least 8 characters</string>
+    <string name="error_select_state">Please select your state</string>
+    <string name="error_select_role">Please select your role</string>
+
+    <!-- State List -->
+    <string-array name="indian_states">
+        <item>Andhra Pradesh</item>
+        <item>Arunachal Pradesh</item>
+        <item>Assam</item>
+        <item>Bihar</item>
+        <item>Chhattisgarh</item>
+        <item>Goa</item>
+        <item>Gujarat</item>
+        <item>Haryana</item>
+        <item>Himachal Pradesh</item>
+        <item>Jharkhand</item>
+        <item>Karnataka</item>
+        <item>Kerala</item>
+        <item>Madhya Pradesh</item>
+        <item>Maharashtra</item>
+        <item>Manipur</item>
+        <item>Meghalaya</item>
+        <item>Mizoram</item>
+        <item>Nagaland</item>
+        <item>Odisha</item>
+        <item>Punjab</item>
+        <item>Rajasthan</item>
+        <item>Sikkim</item>
+        <item>Tamil Nadu</item>
+        <item>Telangana</item>
+        <item>Tripura</item>
+        <item>Uttar Pradesh</item>
+        <item>Uttarakhand</item>
+        <item>West Bengal</item>
+    </string-array>
+
+    <!-- Role List -->
+    <string-array name="user_roles">
+        <item>Medical Staff</item>
+        <item>Police Officer</item>
+        <item>Fire Fighter</item>
+    </string-array>
+
+    <!-- Toast Messages -->
+    <string name="login_success">Login successful</string>
+    <string name="login_failed">Login failed. Please try again.</string>
+    <string name="network_error">Network error. Please check your connection.</string>
 </resources>
