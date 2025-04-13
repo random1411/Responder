@@ -1,5 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- Primary Theme Colors -->
+    <color name="primary">#1976D2</color>
+    <color name="primary_dark">#1565C0</color>
+    <color name="primary_variant">#2196F3</color>
+    <color name="secondary">#FFA000</color>
+    <color name="secondary_variant">#FFB300</color>
+
+    <!-- Status Colors -->
+    <color name="error">#B00020</color>
+    <color name="success">#4CAF50</color>
+    <color name="warning">#FF9800</color>
+    <color name="info">#2196F3</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#DE000000</color>   <!-- 87% black -->
+    <color name="text_secondary">#99000000</color> <!-- 60% black -->
+    <color name="text_hint">#61000000</color>      <!-- 38% black -->
+
+    <!-- Light Theme Specific -->
+    <color name="background_light">#FFFFFF</color>
+    <color name="surface_light">#FFFFFF</color>
+    <color name="error_light">#B00020</color>
+
+    <!-- Dark Theme Specific -->
+    <color name="background_dark">#121212</color>
+    <color name="surface_dark">#121212</color>
+    <color name="error_dark">#CF6679</color>
+
+    <!-- Common Colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
+    <!-- Add to existing colors.xml -->
+    <!-- Overlay Colors -->
+    <color name="scrim">#52000000</color>
+    <color name="ripple_light">#F0F0F0</color>
+    <color name="ripple_dark">#1FFFFFFF</color>
+
+    <!-- State Indicator Colors -->
+    <color name="online">#4CAF50</color>
+    <color name="offline">#F44336</color>
 </resources>
