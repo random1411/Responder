@@ -1,0 +1,159 @@
+flowchart TD
+    %% Responder App Launch & Auth Check
+    ResponderStart([Responder App Launch]) --> CheckInternet{Internet\nAvailable?}
+    CheckInternet -->|No| ShowInternetError[Show Network Error]
+    ShowInternetError --> RetryConnection[Retry Connection Button]
+    RetryConnection --> CheckInternet
+    CheckInternet -->|Yes| CheckAuth{Firebase\nAuth State?}
+    
+    %% Responder Login Flow
+    CheckAuth -->|Not Authenticated| ResponderLoginScreen[Responder Login Screen]
+    ResponderLoginScreen --> InputCredentials[Input Email & Password]
+    InputCredentials --> ValidateInput{Valid Input\nFormat?}
+    ValidateInput -->|No| ShowInputError[Show Validation Error]
+    ShowInputError --> InputCredentials
+    ValidateInput -->|Yes| AuthenticateResponder[Authenticate with Firebase Auth]
+    AuthenticateResponder --> AuthResult{Auth\nResult}
+    AuthResult -->|Failed| ShowAuthError[Show Authentication Error]
+    ShowAuthError --> ResponderLoginScreen
+    AuthResult -->|Success| FetchResponderProfile[Fetch Responder Profile from Firestore]
+    
+    %% Role & State Handling
+    FetchResponderProfile --> CheckRole{Role\nAssigned?}
+    CheckRole -->|No| ShowRoleError[Show "Contact Admin" Error]
+    CheckRole -->|Yes| CheckState{State\nSelected?}
+    CheckState -->|No| StateSelectionScreen[State Selection Screen]
+    StateSelectionScreen --> SelectState[Select State from Dropdown]
+    SelectState --> SaveStatePreference[Save State to Firestore & Preferences]
+    SaveStatePreference --> ResponderMain[Responder Main Activity]
+    CheckState -->|Yes| ResponderMain
+    
+    %% Responder Main Screen Setup
+    ResponderMain --> InitResponderServices[Initialize Core Services]
+    InitResponderServices --> SetupLocationServices[Setup Location Services]
+    InitResponderServices --> SetupResponderFCM[Setup FCM for Incident Alerts]
+    InitResponderServices --> LoadHomeFragment[Load Home Fragment]
+    
+    %% FCM Topic Subscription
+    SetupResponderFCM --> SubscribeToRoleTopics[Subscribe to Role-Specific Topics]
+    SubscribeToRoleTopics --> RoleTopic[topic: role_state]
+    SubscribeToRoleTopics --> SetupNotificationChannels[Setup Notification Channels]
+    SetupNotificationChannels --> HighPriorityChannel[High Priority Channel for SOS]
+    SetupNotificationChannels --> NormalPriorityChannel[Normal Priority for Regular Incidents]
+    
+    %% Incidents List Setup
+    LoadHomeFragment --> SetupIncidentsList[Setup Incidents RecyclerView]
+    SetupIncidentsList --> ConfigureFilters[Configure Filter Options]
+    ConfigureFilters --> PriorityFilter[Priority Filter (SOS First)]
+    ConfigureFilters --> DistanceFilter[Distance Filter (Nearby First)]
+    ConfigureFilters --> StatusFilter[Status Filter (Pending/In Progress)]
+    SetupIncidentsList --> SetupFirestoreQuery[Setup Firestore Incidents Query]
+    
+    %% Firestore Query Configuration
+    SetupFirestoreQuery --> FilterByResponderRole[Filter by Responder Role]
+    SetupFirestoreQuery --> FilterByResponderState[Filter by Selected State]
+    SetupFirestoreQuery --> FilterByStatus[Filter by Status (Not Resolved)]
+    SetupFirestoreQuery --> SortByTimestamp[Sort by Timestamp (Newest First)]
+    SetupFirestoreQuery --> AttachFirestoreListener[Attach Realtime Listener]
+    
+    %% Incident Data Processing
+    AttachFirestoreListener --> ProcessQueryResults[Process Query Results]
+    ProcessQueryResults --> IncidentsCheck{Any\nIncidents?}
+    IncidentsCheck -->|No| ShowNoIncidents[Show "No Incidents" Message]
+    IncidentsCheck -->|Yes| PopulateIncidentsList[Populate Incidents List]
+    PopulateIncidentsList --> ApplySortOrder[Apply Sort Order]
+    PopulateIncidentsList --> HighlightSOSItems[Highlight SOS Items]
+    PopulateIncidentsList --> UpdateCounters[Update Incident Counters]
+    UpdateCounters --> ShowTotalCount[Display Total Incidents Count]
+    UpdateCounters --> ShowPendingCount[Display Pending Count]
+    UpdateCounters --> ShowInProgressCount[Display "On the Way" Count]
+    
+    %% Incident Selection Flow
+    PopulateIncidentsList --> IncidentSelected{Incident\nSelected?}
+    IncidentSelected -->|Yes| OpenIncidentDetails[Open Incident Details Screen]
+    OpenIncidentDetails --> FetchFullIncidentData[Fetch Complete Incident Data]
+    OpenIncidentDetails --> CheckMediaAvailability{Media\nAvailable?}
+    CheckMediaAvailability -->|Yes| LoadMediaFromStorage[Load Media from Firebase Storage]
+    CheckMediaAvailability -->|No| HideMediaSection[Hide Media Section]
+    
+    %% Incident Details Screen
+    FetchFullIncidentData --> ShowIncidentDetails[Show Incident Details Screen]
+    ShowIncidentDetails --> DisplayCitizenInfo[Display Citizen Phone Number]
+    ShowIncidentDetails --> DisplayEmergencyContact[Display Emergency Contact]
+    ShowIncidentDetails --> DisplayLocation[Display Location Information]
+    DisplayLocation --> ShowMapPreview[Show Map Preview with Location]
+    ShowIncidentDetails --> DisplayMedia[Display Media (if available)]
+    DisplayMedia --> PhotoGallery[Photo Gallery Viewer]
+    DisplayMedia --> AudioPlayer[Audio Player for Voice Recordings]
+    ShowIncidentDetails --> DisplayActionButtons[Display Action Buttons]
+    
+    %% Responder Actions
+    DisplayActionButtons --> OnTheWayButton[On the Way Button]
+    DisplayActionButtons --> ResolvedButton[Resolved Button]
+    DisplayActionButtons --> NavigateButton[Navigate to Location Button]
+    OnTheWayButton --> ConfirmOnTheWay{Confirm\nStatus Change?}
+    ResolvedButton --> ConfirmResolved{Confirm\nResolution?}
+    
+    %% Update Incident Status
+    ConfirmOnTheWay -->|Yes| UpdateStatusOnTheWay[Update Status to "On the Way"]
+    UpdateStatusOnTheWay --> UpdateFirestore[Update Firestore Document]
+    UpdateFirestore --> UpdateRealtimeDB[Update Realtime DB]
+    UpdateRealtimeDB --> SendFCMtoCitizen[Send FCM Notification to Citizen]
+    UpdateFirestore --> RefreshIncidentsList[Refresh Incidents List]
+    
+    %% Resolve Incident
+    ConfirmResolved -->|Yes| UpdateStatusResolved[Update Status to "Resolved"]
+    UpdateStatusResolved --> UpdateFirestore
+    UpdateStatusResolved --> SendResolutionFCM[Send Resolution FCM to Citizen]
+    UpdateStatusResolved --> RemoveFromList[Remove from Active Incidents List]
+    
+    %% Navigation
+    NavigateButton --> LaunchGoogleMaps[Launch Google Maps Navigation]
+    LaunchGoogleMaps --> PassLocationCoordinates[Pass Incident Coordinates]
+    
+    %% Map View Fragment
+    ResponderMain --> MapViewFragment[Map View Fragment]
+    MapViewFragment --> InitializeMapView[Initialize Google Map]
+    InitializeMapView --> ConfigureMapSettings[Configure Map Display Settings]
+    InitializeMapView --> FetchActiveIncidents[Fetch Active Incidents for Map]
+    FetchActiveIncidents --> SameQueryAsHome[Use Same Firestore Query as Home]
+    SameQueryAsHome --> ProcessForMap[Process Results for Map Display]
+    
+    %% Map Markers
+    ProcessForMap --> PlaceIncidentMarkers[Place Incident Markers on Map]
+    PlaceIncidentMarkers --> SOSMarkers[Red Markers for SOS]
+    PlaceIncidentMarkers --> RegularIncidentMarkers[Standard Markers for Regular Incidents]
+    PlaceIncidentMarkers --> ResponderLocationMarker[Blue Marker for Responder Location]
+    PlaceIncidentMarkers --> SetupMarkerClickListeners[Setup Marker Click Listeners]
+    SetupMarkerClickListeners --> ShowIncidentInfoWindow[Show Info Window with Basic Details]
+    ShowIncidentInfoWindow --> InfoWindowClick{Info Window\nClicked?}
+    InfoWindowClick -->|Yes| OpenIncidentDetails
+    
+    %% Manual Location Entry (from SMS)
+    MapViewFragment --> ManualLocationEntry[Manual Location Entry Field]
+    ManualLocationEntry --> ParseCoordinates[Parse Coordinates Input]
+    ParseCoordinates --> ValidCoordinates{Valid\nCoordinates?}
+    ValidCoordinates -->|Yes| FocusMapLocation[Focus Map on Entered Location]
+    ValidCoordinates -->|No| ShowCoordinateError[Show Format Error]
+    
+    %% Profile Management
+    ResponderMain --> ProfileFragment[Profile Fragment]
+    ProfileFragment --> DisplayResponderInfo[Display Responder Information]
+    DisplayResponderInfo --> ShowEmail[Show Email (Read-Only)]
+    DisplayResponderInfo --> ShowRole[Show Role (Read-Only)]
+    DisplayResponderInfo --> ShowState[Show State (Editable)]
+    DisplayResponderInfo --> ShowActiveStatus[Show Active/Inactive Toggle]
+    ShowState --> EditState[Edit State Dropdown]
+    EditState --> UpdateStatePreference[Update State in Firestore & Preferences]
+    UpdateStatePreference --> RefreshIncidentsList
+    ShowActiveStatus --> ToggleStatus{Toggle\nStatus}
+    ToggleStatus -->|Active| SetResponderActive[Set Responder as Active]
+    ToggleStatus -->|Inactive| SetResponderInactive[Set Responder as Inactive]
+    SetResponderActive --> UpdateAvailabilityStatus[Update Availability in Firestore]
+    SetResponderInactive --> UpdateAvailabilityStatus
+    
+    %% Logout Flow
+    ProfileFragment --> LogoutButton[Logout Button]
+    LogoutButton --> PerformLogout[Sign Out from Firebase Auth]
+    PerformLogout --> ClearResponderSession[Clear Local Session Data]
+    ClearResponderSession --> ReturnToLogin[Return to Login Screen]

@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isCurrentUser(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isResponder() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/responders/$(request.auth.uid));
+    }
+    
+    function canAccessIncident(incidentData) {
+      // Responders can access incidents matching their role and state
+      return isResponder() && 
+        get(/databases/$(database)/documents/responders/$(request.auth.uid)).data.role == incidentData.category &&
+        get(/databases/$(database)/documents/responders/$(request.auth.uid)).data.state == incidentData.state;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+      allow read: if isCurrentUser(userId) || 
+        (isResponder() && request.auth.token.email.matches('.*@rescuereach\\.org'));
+      allow update: if isCurrentUser(userId);
+      allow delete: if isCurrentUser(userId);
+    }
+    
+    // Incidents collection
+    match /incidents/{incidentId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || // Owner
+        canAccessIncident(resource.data) // Responder with matching role and state
+      );
+      // Allow responders to update only the status field
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || // Owner can update anything
+        (canAccessIncident(resource.data) && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'assignedResponderId', 'updatedAt', 'resolvedAt']))
+      );
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // SOS collection
+    match /sos/{sosId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || // Owner
+        canAccessIncident(resource.data) // Responder with matching role and state
+      );
+      // Allow responders to update only status-related fields
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || // Owner can update anything
+        (canAccessIncident(resource.data) && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'assignedResponderId', 'updatedAt', 'resolvedAt']))
+      );
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Responders collection
+    match /responders/{responderId} {
+      allow create: if false; // Only admin can create responders, but admin app not developed yet
+      allow read: if isAuthenticated(); // All authenticated users can see responder info
+      allow update: if isAuthenticated() && request.auth.uid == responderId; // Responders can update their own data
+      allow delete: if false; // Only admin can delete responders
+    }
+  }
+}

@@ -1,0 +1,26 @@
+flowchart TD
+    %% Test Environment with Citizen & Responder Apps
+    subgraph TestCitizenResponder["Testing with Citizen & Responder Apps"]
+        CitizenAppComponent[Citizen App] --> CreateSOS[Create SOS Report]
+        CitizenAppComponent --> ReportIncident[Report Incident]
+        
+        %% Responder Testing
+        ResponderAppComponent[Responder App] --> ViewIncidents[View Available Incidents]
+        ResponderAppComponent --> RespondToSOS[Respond to SOS]
+        ResponderAppComponent --> UpdateIncidentStatus[Update Incident Status]
+        
+        %% Manual Testing Support
+        FirebaseConsole[Firebase Console] --> ManageTestResponders[Manage Test Responders]
+        FirebaseConsole --> SimulateAdmin[Simulate Admin Actions]
+        
+        %% Testing Data Flow
+        CreateSOS --> FirestoreSOS[Firestore SOS Document]
+        ReportIncident --> FirestoreIncident[Firestore Incident Document]
+        FirestoreSOS --> ResponderNotification[FCM to Responder]
+        FirestoreIncident --> ResponderNotification
+        ResponderNotification --> ViewIncidents
+        RespondToSOS --> UpdateSOSStatus[Update SOS Status]
+        UpdateIncidentStatus --> UpdateFirestoreIncident[Update Incident Document]
+        UpdateSOSStatus --> NotifyCitizen[FCM to Citizen]
+        UpdateFirestoreIncident --> NotifyCitizen
+    end

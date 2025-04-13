@@ -1,0 +1,61 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isCurrentUser(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isResponder() {
+      return isAuthenticated() && 
+        firestore.exists(/databases/(default)/documents/responders/$(request.auth.uid));
+    }
+    
+    function canAccessIncident(incidentId) {
+      let incidentData = firestore.get(/databases/(default)/documents/incidents/$(incidentId)).data;
+      let responderData = firestore.get(/databases/(default)/documents/responders/$(request.auth.uid)).data;
+      
+      return isResponder() && 
+        responderData.role == incidentData.category &&
+        responderData.state == incidentData.state;
+    }
+    
+    // Incident media storage
+    match /incidents/{incidentId}/media/{allMedia=**} {
+      allow read: if isAuthenticated() && (
+        firestore.get(/databases/(default)/documents/incidents/$(incidentId)).data.userId == request.auth.uid ||
+        canAccessIncident(incidentId)
+      );
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && 
+        firestore.get(/databases/(default)/documents/incidents/$(incidentId)).data.userId == request.auth.uid;
+    }
+    
+    // SOS media storage
+    match /sos/{sosId}/media/{allMedia=**} {
+      allow read: if isAuthenticated() && (
+        firestore.get(/databases/(default)/documents/sos/$(sosId)).data.userId == request.auth.uid ||
+        canAccessIncident(sosId)
+      );
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && 
+        firestore.get(/databases/(default)/documents/sos/$(sosId)).data.userId == request.auth.uid;
+    }
+    
+    // User profile media
+    match /users/{userId}/profile/{allMedia=**} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isCurrentUser(userId);
+    }
+    
+    // Responder profile media
+    match /responders/{responderId}/profile/{allMedia=**} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isCurrentUser(responderId);
+    }
+  }
+}
