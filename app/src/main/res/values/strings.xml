@@ -44,7 +44,7 @@
     <!-- Add to existing strings.xml -->
     <!-- Splash Screen -->
     <string name="splash_welcome">Welcome to RescueReach</string>
-    <string name="splash_loading">Loading…</string>
+    <string name="splash_loading">Looading…</string>
     <string name="splash_no_internet">No Internet Connection</string>
     <string name="splash_retry">Retry</string>
 
