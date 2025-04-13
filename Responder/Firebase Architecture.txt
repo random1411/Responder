@@ -1,0 +1,37 @@
+flowchart TD
+    %% Responder App Database Structure
+    subgraph ResponderFirebase["Responder App Firebase"]
+        %% Firestore Collections
+        ResponderFirestore{{"Firestore Collections"}}
+        ResponderFirestore --> ResponderProfiles["responders/{email}\n- Role assignment\n- State assignment\n- Status (active/inactive)\n- Last active timestamp"]
+        ResponderFirestore --> AssignedIncidents["incidents/{incident_id}\n- Read incidents\n- Update status\n- Add notes\n- Track resolution"]
+        ResponderFirestore --> AssignedSOS["sos/{sos_id}\n- Read SOS reports\n- Update status\n- Track resolution"]
+        
+        %% Realtime Database
+        ResponderRTDB{{"Realtime Database"}}
+        ResponderRTDB --> ResponderLocations["locations/responders/{responder_id}\n- Geohash\n- Lat/Lng\n- Last updated"]
+        ResponderRTDB --> ActiveIncidents["incidents/{incident_id}\n- Status tracking\n- Priority flags\n- Assignee information"]
+        ResponderRTDB --> ActiveSOS["sos/{sos_id}\n- Status tracking\n- High priority flags\n- Assignee information"]
+        
+        %% Storage
+        ResponderStorage{{"Firebase Storage"}}
+        ResponderStorage --> IncidentMediaAccess["incidents/{incident_id}/media/\n- View citizen-submitted media"]
+        ResponderStorage --> SOSMediaAccess["sos/{sos_id}/media/\n- View SOS media"]
+        ResponderStorage --> ResponderMedia["responders/{responder_id}/profile/\n- Responder photo"]
+    end
+    
+    %% Responder App Data Flow
+    ResponderAuth((Firebase\nAuthentication)) --> ResponderFirestore
+    ResponderApp[Responder Mobile App] --> ResponderAuth
+    ResponderApp --> ResponderFirestore
+    ResponderApp --> ResponderRTDB
+    ResponderApp --> ResponderStorage
+    
+    %% Real-time Aspects
+    ResponderApp --> ListenForNew[Listen for New Incidents]
+    ListenForNew --> ResponderRTDB
+    ResponderApp --> UpdateStatus[Update Incident Status]
+    UpdateStatus --> ResponderFirestore
+    UpdateStatus --> ResponderRTDB
+    ResponderApp --> GeoQuery[GeoQuery for Nearby Incidents]
+    GeoQuery --> ResponderRTDB
